@@ -1,0 +1,24 @@
+#!/usr/bin/env python3
+
+import numpy as np
+from skimage import color
+
+
+def pixel_rgb2hsv(rgb):
+    return color.rgb2hsv(np.array([[rgb]]))[0][0]
+
+
+def pixel_rgb2lab(rgb):
+    return color.rgb2lab(np.array([[rgb]]))[0][0]
+
+
+def rgb2string(rgb):
+    return "RGB: {}".format(rgb*255)
+
+
+def hsv2string(hsv):
+    return "HSV: {}, {}, {}".format(hsv[0] * 360, hsv[1] * 100, hsv[2] * 100)
+
+
+def lab2string(lab):
+    return "Lab: {}, {}, {}".format(lab[0], lab[1], lab[2])
