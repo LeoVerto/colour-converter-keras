@@ -9,6 +9,7 @@ from keras import backend as K
 from keras.callbacks import TensorBoard, Callback
 from utils import *
 from skimage import color
+from colormath.color_diff_matrix import delta_e_cie2000
 
 # Config
 
@@ -23,8 +24,8 @@ training = np.load("training.npy")
 firstRun = True
 
 
-# Delta E 76
-def delta_e_np(y_true, y_pred):
+# Delta E 76 using NumPy
+def cie1976_np(y_true, y_pred):
     distance = np.sqrt(
         np.square(y_pred[:, 0]-y_true[:, 0])
         + np.square(y_pred[:, 1]-y_true[:, 1])
@@ -34,8 +35,8 @@ def delta_e_np(y_true, y_pred):
     return distance
 
 
-# Delta E 76
-def delta_e_tensor(y_true, y_pred):
+# Delta E 76 using Keras
+def cie1976_keras(y_true, y_pred):
     # y_pred = K.clip(y_pred, _EPSILON, 1.0 - _EPSILON)
     distance = K.sqrt(
         K.square(y_pred[:, 0]-y_true[:, 0])
@@ -45,8 +46,13 @@ def delta_e_tensor(y_true, y_pred):
     return distance
 
 
+# Delta E 2000 using NumPy
+def cie2000_np(y_true, y_pred):
+    return delta_e_cie2000(K.eval(y_true), K.eval(y_pred))
+
+
 def loss(y_true, y_pred):
-    return K.mean(K.square(delta_e_tensor(y_true, y_pred)))
+    return K.mean(K.square(cie1976_keras(y_true, y_pred)))
 
 
 def test_delta_e():
@@ -58,9 +64,9 @@ def test_delta_e():
     b3 = np.array([b, b, b])
     c3 = np.array([c, c, c])
 
-    print("Numpy: {} Keras: {}".format(delta_e_np(a3, a3), K.eval(delta_e_tensor(K.variable(a3), K.variable(a3)))))
-    print("Numpy: {} Keras: {}".format(delta_e_np(a3, b3), K.eval(delta_e_tensor(K.variable(a3), K.variable(b3)))))
-    print("Numpy: {} Keras: {}".format(delta_e_np(a3, c3), K.eval(delta_e_tensor(K.variable(a3), K.variable(c3)))))
+    print("Numpy: {} Keras: {}".format(cie1976_np(a3, a3), K.eval(cie1976_keras(K.variable(a3), K.variable(a3)))))
+    print("Numpy: {} Keras: {}".format(cie1976_np(a3, b3), K.eval(cie1976_keras(K.variable(a3), K.variable(b3)))))
+    print("Numpy: {} Keras: {}".format(cie1976_np(a3, c3), K.eval(cie1976_keras(K.variable(a3), K.variable(c3)))))
 
 
 def train(model, render=False):
@@ -150,7 +156,7 @@ def run():
         Lambda(lambda x: x * 128)  # Multiply by 128 as a* and b* may be negative up to -128
     ])
 
-    model.compile(loss=loss, optimizer="adam", metrics=["accuracy", delta_e_tensor])
+    model.compile(loss=loss, optimizer="adam", metrics=["accuracy", cie1976_keras])
 
     render = DRAW_WAIT != 0
 
