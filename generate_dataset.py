@@ -5,7 +5,7 @@ import utils
 
 
 def generate_sample(v=False):
-    rgb = np.random.rand(1, 3)[0]
+    rgb = np.random.rand(3)
     hsv = utils.pixel_rgb2hsv(rgb)
     lab = utils.pixel_rgb2lab(rgb)
 

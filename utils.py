@@ -5,11 +5,11 @@ from skimage import color
 
 
 def pixel_rgb2hsv(rgb):
-    return color.rgb2hsv(np.array([[rgb]]))[0][0]
+    return color.rgb2hsv(np.reshape(rgb, (1, 1, 3)))[0][0]
 
 
 def pixel_rgb2lab(rgb):
-    return color.rgb2lab(np.array([[rgb]]))[0][0]
+    return color.rgb2lab(np.reshape(rgb, (1, 1, 3)))[0][0]
 
 
 def rgb2string(rgb):
