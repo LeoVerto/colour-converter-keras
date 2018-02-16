@@ -1,16 +1,24 @@
 #!/usr/bin/env python3
 
+import cv2
+import sys
 import numpy as np
 from keras.models import Sequential
 from keras.layers import Dense, Activation, Lambda
 from keras import backend as K
-from keras.callbacks import TensorBoard
-from utils import rgb2string, lab2string, pixel_rgb2lab
+from keras.callbacks import TensorBoard, Callback
+from utils import *
+from skimage import color
 
-_EPSILON = K.epsilon()
+
+BATCH_SIZE = 20
+EPOCH = 5
+DRAW_WAIT = 5  # Set to 0 to disable drawing
 
 tensorboard = TensorBoard(log_dir='./logs', histogram_freq=0,
                           write_graph=True, write_images=False)
+
+training = np.load("training.npy")
 
 
 # Delta E 76
@@ -22,6 +30,7 @@ def delta_e_np(y_true, y_pred):
     )
     # print(distance)
     return distance
+
 
 # Delta E 76
 def delta_e_tensor(y_true, y_pred):
@@ -52,10 +61,16 @@ def test_delta_e():
     print("Numpy: {} Keras: {}".format(delta_e_np(a3, c3), K.eval(delta_e_tensor(K.variable(a3), K.variable(c3)))))
 
 
-def train(model):
-    training = np.load("training.npy")
+def train(model, render=False):
+    training_rgb = training[:, [0, 1, 2]];
+    training_lab = training[:, [6, 7, 8]];
 
-    model.fit(training[:, [0, 1, 2]], training[:, [6, 7, 8]], nb_epoch=5, batch_size=20, callbacks=[tensorboard])
+    if render:
+        draw_callback = DrawCallback()
+        model.fit(training_rgb, training_lab, nb_epoch=EPOCH, batch_size=BATCH_SIZE,
+                  callbacks=[tensorboard, draw_callback])
+    else:
+        model.fit(training_rgb, training_lab, nb_epoch=EPOCH, batch_size=BATCH_SIZE, callbacks=[tensorboard])
 
 
 def evaluate(model):
@@ -88,6 +103,32 @@ def predict(model):
         print(lab2string(model.predict(array)[0]))
 
 
+def draw(model):
+    data = training
+
+    img = np.copy(data[:10, [0, 1, 2]])
+    img = np.reshape(img, (10, 1, 3))
+
+    b = data[:10, [0, 1, 2]]
+    predictions = np.divide(np.reshape(model.predict(b), (10, 1, 3)), 128)
+    pred_rgb = np.multiply(color.lab2rgb(predictions), 64)  # Magic 64, no idea why this needs to be multiplied
+    img = np.append(img, pred_rgb, axis=1)
+    img = np.reshape(img, (10, 2, 3))
+
+    cv2.namedWindow("name", cv2.WINDOW_NORMAL)
+    cv2.imshow("name", img)
+    cv2.resizeWindow("name",600,600)
+    key = cv2.waitKey(DRAW_WAIT)
+
+    if key == ord('q'):
+        sys.exit("User terminated program.")
+
+
+class DrawCallback(Callback):
+    def on_batch_end(self, batch, logs={}):
+        draw(self.model)
+
+
 def run():
     model = Sequential([
         Dense(12, input_dim=3),
@@ -96,14 +137,18 @@ def run():
         Activation("relu"),
         Dense(3),
         Activation("linear"),
-        Lambda(lambda x: x*256)  # Magic lambda, a* and b* may be negative up to -128
+        Lambda(lambda x: x * 128)  # Multiply by 128 as a* and b* may be negative up to -128
     ])
 
     model.compile(loss=loss, optimizer="adam", metrics=["accuracy", delta_e_tensor])
 
-    train(model)
+    render = DRAW_WAIT != 0
+
+    train(model, render)
     evaluate(model)
     predict(model)
 
-#test_delta_e()
+
+# test_delta_e()
 run()
+# print(training[:10])
