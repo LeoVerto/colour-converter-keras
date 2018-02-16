@@ -31,8 +31,9 @@ make sense.
 ## Findings
 Disclaimer: None of these very properly verified by more than one test run.
 
-* SGD doesn't work at all (probably doesn't like the output format),
-Adam however works quite well
+* SGD doesn't really work, most training attempts wouldn't even remotely
+resemble any optimization
+* Adam however works quite well
 * Squared mean loss compared to mean loss trades off initial training speed
 for better accuracy in the long run
 * The output layer should be activated linearly (translates well to LAB output range)
