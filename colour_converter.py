@@ -10,6 +10,7 @@ from keras.callbacks import TensorBoard, Callback
 from utils import *
 from skimage import color
 
+# Config
 
 BATCH_SIZE = 20
 EPOCH = 5
@@ -20,6 +21,7 @@ tensorboard = TensorBoard(log_dir='./logs', histogram_freq=0,
 
 training = np.load("training.npy")
 firstRun = True
+
 
 # Delta E 76
 def delta_e_np(y_true, y_pred):
@@ -78,8 +80,10 @@ def evaluate(model):
 
     print("EVALUATION:")
 
-    loss_and_metrics = model.evaluate(validation[:, [0, 1, 2]], validation[:, [6, 7, 8]], batch_size=20)
+    loss_and_metrics = model.evaluate(validation[:, [0, 1, 2]], validation[:, [6, 7, 8]], batch_size=BATCH_SIZE)
     print(loss_and_metrics)
+
+    draw(model, 0)
 
 
 def predict(model):
@@ -103,7 +107,7 @@ def predict(model):
         print(lab2string(model.predict(array)[0]))
 
 
-def draw(model):
+def draw(model, wait):
     data = training
 
     img = np.copy(data[:10, [0, 1, 2]])
@@ -124,7 +128,7 @@ def draw(model):
         cv2.waitKey(0)
         firstRun = False
 
-    key = cv2.waitKey(DRAW_WAIT)
+    key = cv2.waitKey(wait)
 
     if key == ord('q'):
         sys.exit("User terminated program.")
@@ -132,7 +136,7 @@ def draw(model):
 
 class DrawCallback(Callback):
     def on_batch_end(self, batch, logs={}):
-        draw(self.model)
+        draw(self.model, DRAW_WAIT)
 
 
 def run():
