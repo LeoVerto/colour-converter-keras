@@ -6,9 +6,9 @@ This project was inspired by [jeyj0/PyNNet](https://github.com/jeyj0/PyNNet).
 
 I do realize this may not be a very interesting application for machine learning
 but it seemed appropriate to get familiar with Keras and only took the better
-part of a night to build.
+part of ~~a night~~ two nights to build.
 
-I chose the L\*a\*b\* colour space as the output, because it easily allows 
+I chose the L\*a\*b\* colour space as the output because it easily allows 
 for calculation [Delta E](https://en.wikipedia.org/wiki/Color_difference#LAB_Delta_E),
 which is a pretty consistent measurement of how humans perceive colour difference.
 
@@ -20,3 +20,16 @@ definitely room for further improvement.
 ## Running
 1. Run `generate_dataset.py` to generate a training and validation set.
 2. Run `colour_converter.py` to train and test the model.
+
+## Findings
+Disclaimer: None of these very properly verified by more than one test run.
+
+* SGD doesn't work at all (probably doesn't like the output format),
+Adam however works quite well
+* Squared mean loss compared to mean loss trades off initial training speed
+for better accuracy in the long run
+* The output layer should be activated linearly (translates well to LAB output range)
+* The earlier layers prefer being activated by relu (RGB inputs are only positive)
+* A batch size of 20 works pretty well, larger ones not so much
+* Adding another hidden layer improved accuracy a lot and so did adding more
+neurons to it

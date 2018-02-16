@@ -35,5 +35,6 @@ def test():
     s = s[0]
     print(s)
 
-save_samples(55000, "training.npy")
-save_samples(5000, "validation.npy")
+
+save_samples(100000, "training.npy")
+save_samples(10000, "validation.npy")
