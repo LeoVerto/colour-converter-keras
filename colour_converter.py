@@ -13,6 +13,7 @@ tensorboard = TensorBoard(log_dir='./logs', histogram_freq=0,
                           write_graph=True, write_images=False)
 
 
+# Delta E 76
 def delta_e_np(y_true, y_pred):
     distance = np.sqrt(
         np.square(y_pred[:, 0]-y_true[:, 0])
@@ -22,7 +23,7 @@ def delta_e_np(y_true, y_pred):
     # print(distance)
     return distance
 
-
+# Delta E 76
 def delta_e_tensor(y_true, y_pred):
     # y_pred = K.clip(y_pred, _EPSILON, 1.0 - _EPSILON)
     distance = K.sqrt(
