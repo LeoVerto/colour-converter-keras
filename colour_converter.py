@@ -44,7 +44,7 @@ def delta_e_tensor(y_true, y_pred):
 
 
 def loss(y_true, y_pred):
-    return K.square(K.mean(delta_e_tensor(y_true, y_pred)))
+    return K.mean(K.square(delta_e_tensor(y_true, y_pred)))
 
 
 def test_delta_e():
