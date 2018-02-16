@@ -9,7 +9,7 @@ but it seemed appropriate to get familiar with Keras and only took the better
 part of ~~a night~~ two nights to build.
 
 I chose the L\*a\*b\* colour space as the output because it easily allows 
-for calculation [Delta E](https://en.wikipedia.org/wiki/Color_difference#LAB_Delta_E),
+for calculation [Delta E](https://zschuessler.github.io/DeltaE/learn/),
 which is a pretty consistent measurement of how humans perceive colour difference.
 
 The formula used for the loss function is CIE76 (or Delta E 67)
