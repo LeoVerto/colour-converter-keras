@@ -19,7 +19,7 @@ tensorboard = TensorBoard(log_dir='./logs', histogram_freq=0,
                           write_graph=True, write_images=False)
 
 training = np.load("training.npy")
-
+firstRun = True
 
 # Delta E 76
 def delta_e_np(y_true, y_pred):
@@ -115,9 +115,15 @@ def draw(model):
     img = np.append(img, pred_rgb, axis=1)
     img = np.reshape(img, (10, 2, 3))
 
-    cv2.namedWindow("name", cv2.WINDOW_NORMAL)
-    cv2.imshow("name", img)
-    cv2.resizeWindow("name",600,600)
+    cv2.namedWindow("Keras Colour Converter", cv2.WINDOW_NORMAL)
+    cv2.resizeWindow("Keras Colour Converter", 600, 600)
+    cv2.imshow("Keras Colour Converter", img)
+
+    global firstRun
+    if firstRun:
+        cv2.waitKey(0)
+        firstRun = False
+
     key = cv2.waitKey(DRAW_WAIT)
 
     if key == ord('q'):

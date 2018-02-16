@@ -26,7 +26,8 @@ make sense.
 
 ## Running
 1. Run `generate_dataset.py` to generate a training and validation set.
-2. Run `colour_converter.py` to train and test the model.
+2. Run `colour_converter.py` to train and evaluate the model.
+3. If rendering is enabled, press any key to start training.
 
 ## Findings
 Disclaimer: None of these very properly verified by more than one test run.
