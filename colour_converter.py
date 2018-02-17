@@ -5,7 +5,6 @@ import sys
 from keras.models import Sequential
 from keras.layers import Dense, Activation, Lambda
 from keras.callbacks import TensorBoard, Callback
-from skimage import color
 from utils import *
 from delta_e import *
 
@@ -14,6 +13,7 @@ from delta_e import *
 BATCH_SIZE = 20
 EPOCHS = 5
 DRAW_WAIT = 5  # Set to 0 to disable drawing
+DRAW_EVERY = 10  # Only draw every n batches to speed up training
 
 tensorboard = TensorBoard(log_dir='./logs', histogram_freq=0,
                           write_graph=True, write_images=False)
@@ -98,8 +98,16 @@ def draw(model, wait):
 
 
 class DrawCallback(Callback):
+    def __init__(self):
+        super().__init__()
+        self.batch = 0
+        self.N = DRAW_EVERY
+
     def on_batch_end(self, batch, logs={}):
-        draw(self.model, DRAW_WAIT)
+        if self.batch % self.N == 0:
+            self.batch = 0
+            draw(self.model, DRAW_WAIT)
+        self.batch += 1
 
 
 def run():

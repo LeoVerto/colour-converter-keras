@@ -52,8 +52,6 @@ def rad2deg(rad):
 # https://github.com/gtaylor/python-colormath/blob/master/colormath/color_diff_matrix.py#L112
 # noinspection PyPep8Naming
 def cie2000_keras(y_true, y_pred, Kl=1, Kc=1, Kh=1):
-
-
     L1 = y_true[0][0]
     a1 = y_true[0][1]
     b1 = y_true[0][2]
@@ -85,6 +83,10 @@ def cie2000_keras(y_true, y_pred, Kl=1, Kc=1, Kh=1):
     h2p = rad2deg(tf.atan2(b2, a2p))
     h2p = K.switch(K.less(h2p, ZERO), h2p + THREESIXTY, h2p)
 
+    diff_h2p_h1p = h2p - h1p
+    delta_hp = K.switch(K.greater(K.abs(h1p - h2p), ONEEIGHTY), diff_h2p_h1p + THREESIXTY, diff_h2p_h1p)
+    delta_hp = K.switch(K.greater(h2p, h1p), delta_hp - K.constant(720), delta_hp)
+
     avg_Hp = K.switch(K.greater(K.abs(h1p - h2p), ONEEIGHTY), THREESIXTY + h1p + h2p, h1p + h2p) / TWO
 
     T = 1 - K.constant(0.17) * K.cos(deg2rad(avg_Hp - 30)) + \
@@ -92,21 +94,17 @@ def cie2000_keras(y_true, y_pred, Kl=1, Kc=1, Kh=1):
         K.constant(0.32) * K.cos(deg2rad(3 * avg_Hp + 6)) - \
         K.constant(0.2) * K.cos(deg2rad(4 * avg_Hp - 63))
 
-    diff_h2p_h1p = h2p - h1p
-    delta_hp = K.switch(K.greater(K.abs(diff_h2p_h1p), ONEEIGHTY), diff_h2p_h1p + THREESIXTY, diff_h2p_h1p)
-    delta_hp = K.switch(K.greater(h2p, h1p), delta_hp - K.constant(720), delta_hp)
-
-    delta_Lp = L2 - L1
-    delta_Cp = C2p - C1p
-    delta_Hp = 2 * K.sqrt(C2p * C1p) * K.sin(deg2rad(delta_hp) / TWO)
-
     S_L = 1 + ((K.constant(0.015) * K.pow(avg_Lp - 50, 2)) / K.sqrt(20 + K.pow(avg_Lp - 50, TWO)))
     S_C = 1 + K.constant(0.045) * avg_Cp
     S_H = 1 + K.constant(0.015) * avg_Cp * T
 
-    delta_ro = 30 * K.exp(-(K.pow(((avg_Hp - 275) / 25), TWO)))
+    delta_ro = 60 * K.exp(-(K.pow(((avg_Hp - 275) / 25), TWO)))
     R_C = K.sqrt((K.pow(avg_Cp, SEVEN)) / (K.pow(avg_Cp, SEVEN) + K.pow(K.constant(25.0), SEVEN)))
-    R_T = -2 * R_C * K.sin(2 * deg2rad(delta_ro))
+    R_T = -2 * R_C * K.sin(deg2rad(delta_ro))
+
+    delta_Lp = L2 - L1
+    delta_Cp = C2p - C1p
+    delta_Hp = 2 * K.sqrt(C2p * C1p) * K.sin(deg2rad(delta_hp) / TWO)
 
     return K.sqrt(
         K.pow(delta_Lp / (S_L * Kl), 2) +
@@ -139,4 +137,4 @@ def test_delta_e():
     print("Numpy: {} Keras: {}".format(cie2000_np(a3, c3), K.eval(cie2000_keras(K.variable(a3), K.variable(c3)))))
 
 
-test_delta_e()
+# test_delta_e()
