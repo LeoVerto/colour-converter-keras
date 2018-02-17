@@ -6,12 +6,6 @@ from keras import backend as K
 from colormath.color_diff_matrix import delta_e_cie2000
 
 PI_TENSOR = K.constant(np.pi)
-ZERO = K.constant(0)
-ONE = K.constant(1)
-TWO = K.constant(2)
-SEVEN = K.constant(7)
-THREESIXTY = K.constant(360)
-ONEEIGHTY = K.constant(180)
 
 
 # Delta E 76 using NumPy
@@ -41,11 +35,11 @@ def cie2000_np(y_true, y_pred):
 
 
 def deg2rad(deg):
-    return deg * (PI_TENSOR/ONEEIGHTY)
+    return deg * (PI_TENSOR/180)
 
 
 def rad2deg(rad):
-    return rad * (ONEEIGHTY/PI_TENSOR)
+    return rad * (180/PI_TENSOR)
 
 
 # Delta E 2000 using Keras
@@ -60,51 +54,51 @@ def cie2000_keras(y_true, y_pred, Kl=1, Kc=1, Kh=1):
     a2 = y_pred[0][1]
     b2 = y_pred[0][2]
 
-    avg_Lp = (L1 + L2) / TWO
+    avg_Lp = (L1 + L2) / 2
 
     C1 = K.sqrt(K.pow(a1 + b1, 2))
     C2 = K.sqrt(K.pow(a2 + b2, 2))
 
-    avg_C1_C2 = (C1 + C2) / TWO
+    avg_C1_C2 = (C1 + C2) / 2
 
-    G = K.constant(0.5) * (1 - K.sqrt(K.pow(avg_C1_C2, SEVEN) / (K.pow(avg_C1_C2, SEVEN) + K.pow(K.constant(25.0), SEVEN))))
+    G = K.constant(0.5) * (1 - K.sqrt(K.pow(avg_C1_C2, 7) / (K.pow(avg_C1_C2, 7) + K.pow(25.0, 7))))
 
-    a1p = (ONE + G) * a1
-    a2p = (ONE + G) * a2
+    a1p = (1 + G) * a1
+    a2p = (1 + G) * a2
 
     C1p = K.sqrt(K.pow(a1p, 2) + K.pow(b1, 2))
     C2p = K.sqrt(K.pow(a2p, 2) + K.pow(b2, 2))
 
-    avg_Cp = (C1p + C2p) / TWO
+    avg_Cp = (C1p + C2p) / 2
 
     h1p = rad2deg(tf.atan2(b1, a1p))
-    h1p = K.switch(K.less(h1p, ZERO), h1p + THREESIXTY, h1p)
+    h1p = K.switch(K.less(h1p, 0), h1p + 360, h1p)
 
     h2p = rad2deg(tf.atan2(b2, a2p))
-    h2p = K.switch(K.less(h2p, ZERO), h2p + THREESIXTY, h2p)
+    h2p = K.switch(K.less(h2p, 0), h2p + 360, h2p)
 
     diff_h2p_h1p = h2p - h1p
-    delta_hp = K.switch(K.greater(K.abs(h1p - h2p), ONEEIGHTY), diff_h2p_h1p + THREESIXTY, diff_h2p_h1p)
+    delta_hp = K.switch(K.greater(K.abs(h1p - h2p), 180), diff_h2p_h1p + 360, diff_h2p_h1p)
     delta_hp = K.switch(K.greater(h2p, h1p), delta_hp - K.constant(720), delta_hp)
 
-    avg_Hp = K.switch(K.greater(K.abs(h1p - h2p), ONEEIGHTY), THREESIXTY + h1p + h2p, h1p + h2p) / TWO
+    avg_Hp = K.switch(K.greater(K.abs(h1p - h2p), 180), 360 + h1p + h2p, h1p + h2p) / 2
 
     T = 1 - K.constant(0.17) * K.cos(deg2rad(avg_Hp - 30)) + \
         K.constant(0.24) * K.cos(deg2rad(2 * avg_Hp)) + \
         K.constant(0.32) * K.cos(deg2rad(3 * avg_Hp + 6)) - \
         K.constant(0.2) * K.cos(deg2rad(4 * avg_Hp - 63))
 
-    S_L = 1 + ((K.constant(0.015) * K.pow(avg_Lp - 50, 2)) / K.sqrt(20 + K.pow(avg_Lp - 50, TWO)))
+    S_L = 1 + ((K.constant(0.015) * K.pow(avg_Lp - 50, 2)) / K.sqrt(20 + K.pow(avg_Lp - 50, 2)))
     S_C = 1 + K.constant(0.045) * avg_Cp
     S_H = 1 + K.constant(0.015) * avg_Cp * T
 
-    delta_ro = 60 * K.exp(-(K.pow(((avg_Hp - 275) / 25), TWO)))
-    R_C = K.sqrt((K.pow(avg_Cp, SEVEN)) / (K.pow(avg_Cp, SEVEN) + K.pow(K.constant(25.0), SEVEN)))
+    delta_ro = 60 * K.exp(-(K.pow(((avg_Hp - 275) / 25), 2)))
+    R_C = K.sqrt((K.pow(avg_Cp, 7)) / (K.pow(avg_Cp, 7) + K.pow(K.constant(25.0), 7)))
     R_T = -2 * R_C * K.sin(deg2rad(delta_ro))
 
     delta_Lp = L2 - L1
     delta_Cp = C2p - C1p
-    delta_Hp = 2 * K.sqrt(C2p * C1p) * K.sin(deg2rad(delta_hp) / TWO)
+    delta_Hp = 2 * K.sqrt(C2p * C1p) * K.sin(deg2rad(delta_hp) / 2)
 
     return K.sqrt(
         K.pow(delta_Lp / (S_L * Kl), 2) +
