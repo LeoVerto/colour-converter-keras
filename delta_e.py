@@ -12,9 +12,9 @@ PI_TENSOR = K.constant(np.pi)
 # Delta E 76 using NumPy
 def cie1976_np(y_true, y_pred):
     distance = np.sqrt(
-        np.square(y_pred[:, 0]-y_true[:, 0])
-        + np.square(y_pred[:, 1]-y_true[:, 1])
-        + np.square(y_pred[:, 2]-y_true[:, 2])
+        np.square(y_pred[0, 0]-y_true[0, 0])
+        + np.square(y_pred[0, 1]-y_true[0, 1])
+        + np.square(y_pred[0, 2]-y_true[0, 2])
     )
     # print(distance)
     return distance
@@ -23,9 +23,9 @@ def cie1976_np(y_true, y_pred):
 # Delta E 76 using Keras
 def cie1976_keras(y_true, y_pred):
     distance = K.sqrt(
-        K.square(y_pred[:, 0]-y_true[:, 0])
-        + K.square(y_pred[:, 1]-y_true[:, 1])
-        + K.square(y_pred[:, 2]-y_true[:, 2])
+        K.square(y_pred[0, 0]-y_true[0, 0])
+        + K.square(y_pred[0, 1]-y_true[0, 1])
+        + K.square(y_pred[0, 2]-y_true[0, 2])
     )
     return distance
 
@@ -120,13 +120,9 @@ def cie2000_keras(y_true, y_pred, Kl=1, Kc=1, Kh=1):
 
 
 def test_delta_e():
-    # a = np.array([47, 26, -23])
-    # b = np.array([47, 26, -24])
-    # c = np.array([58, -28, 18])
-
-    a = np.array([.1, .5, -.4])
-    b = np.array([.9, .6, -.56])
-    c = np.array([.3, -.5, .12])
+    a = np.array([47, 26, -23])
+    b = np.array([47, 26, -24])
+    c = np.array([58, -28, 18])
 
     a3 = np.array([a, a, a])
     b3 = np.array([b, b, b])
@@ -141,6 +137,7 @@ def test_delta_e():
     print("Numpy: {} Keras: {}".format(cie2000_np(a3, a3), K.eval(cie2000_keras(K.variable(a3), K.variable(a3)))))
     print("Numpy: {} Keras: {}".format(cie2000_np(a3, b3), K.eval(cie2000_keras(K.variable(a3), K.variable(b3)))))
     print("Numpy: {} Keras: {}".format(cie2000_np(a3, c3), K.eval(cie2000_keras(K.variable(a3), K.variable(c3)))))
+
 
 if __name__ == '__main__':
     test_delta_e()
