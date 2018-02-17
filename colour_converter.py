@@ -111,7 +111,7 @@ class DrawCallback(Callback):
         self.batch += 1
 
 
-def run():
+def get_model():
     model = Sequential([
         Dense(12, input_dim=3),
         Activation("relu"),
@@ -121,7 +121,11 @@ def run():
         Activation("linear"),
         Lambda(lambda x: x * 128)  # Multiply by 128 as a* and b* may be negative up to -128
     ])
+    return model
 
+
+def run():
+    model = get_model()
     model.compile(loss=loss, optimizer="adam", metrics=[cie1976_keras, cie2000_keras])
 
     render = DRAW_WAIT != 0
@@ -131,5 +135,5 @@ def run():
     predict(model)
 
 
-run()
-# print(training[:10])
+if __name__ == '__main__':
+    run()

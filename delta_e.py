@@ -142,5 +142,5 @@ def test_delta_e():
     print("Numpy: {} Keras: {}".format(cie2000_np(a3, b3), K.eval(cie2000_keras(K.variable(a3), K.variable(b3)))))
     print("Numpy: {} Keras: {}".format(cie2000_np(a3, c3), K.eval(cie2000_keras(K.variable(a3), K.variable(c3)))))
 
-
-# test_delta_e()
+if __name__ == '__main__':
+    test_delta_e()
