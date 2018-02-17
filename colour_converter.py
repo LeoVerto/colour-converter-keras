@@ -2,11 +2,12 @@
 
 import cv2
 import sys
+from keras import backend as K
 from keras.models import Sequential
 from keras.layers import Dense, Activation, Lambda
 from keras.callbacks import TensorBoard, Callback
 from utils import *
-from delta_e import *
+from delta_e import cie1976_keras, cie2000_keras
 
 # Config
 

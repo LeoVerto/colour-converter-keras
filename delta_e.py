@@ -3,7 +3,8 @@
 import numpy as np
 import tensorflow as tf
 from keras import backend as K
-from colormath.color_diff_matrix import delta_e_cie2000
+from colormath.color_diff import delta_e_cie2000
+from colormath.color_objects import LabColor
 
 PI_TENSOR = K.constant(np.pi)
 
@@ -31,7 +32,18 @@ def cie1976_keras(y_true, y_pred):
 
 # Delta E 2000 using NumPy
 def cie2000_np(y_true, y_pred):
-    return delta_e_cie2000(y_true, y_pred)
+    L1 = y_true[0][0]
+    a1 = y_true[0][1]
+    b1 = y_true[0][2]
+
+    L2 = y_pred[0][0]
+    a2 = y_pred[0][1]
+    b2 = y_pred[0][2]
+
+    x = LabColor(L1, a1, b1)
+    y = LabColor(L2, a2, b2)
+
+    return delta_e_cie2000(x, y)
 
 
 def deg2rad(deg):
@@ -108,9 +120,9 @@ def cie2000_keras(y_true, y_pred, Kl=1, Kc=1, Kh=1):
 
 
 def test_delta_e():
-    a = np.array([47, 26, -23])
-    b = np.array([47, 26, -24])
-    c = np.array([58, -28, 18])
+    # a = np.array([47, 26, -23])
+    # b = np.array([47, 26, -24])
+    # c = np.array([58, -28, 18])
 
     a = np.array([.1, .5, -.4])
     b = np.array([.9, .6, -.56])
