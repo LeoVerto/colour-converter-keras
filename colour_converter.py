@@ -12,7 +12,7 @@ from delta_e import *
 # Config
 
 BATCH_SIZE = 20
-EPOCH = 5
+EPOCHS = 5
 DRAW_WAIT = 5  # Set to 0 to disable drawing
 
 tensorboard = TensorBoard(log_dir='./logs', histogram_freq=0,
@@ -23,19 +23,19 @@ firstRun = True
 
 
 def loss(y_true, y_pred):
-    return K.mean(K.square(cie1976_keras(y_true, y_pred)))
+    return K.mean(K.square(cie2000_keras(y_true, y_pred)))
 
 
 def train(model, render=False):
-    training_rgb = training[:, [0, 1, 2]];
-    training_lab = training[:, [6, 7, 8]];
+    training_rgb = training[:, [0, 1, 2]]
+    training_lab = training[:, [6, 7, 8]]
 
     if render:
         draw_callback = DrawCallback()
-        model.fit(training_rgb, training_lab, nb_epoch=EPOCH, batch_size=BATCH_SIZE,
+        model.fit(training_rgb, training_lab, epochs=EPOCHS, batch_size=BATCH_SIZE,
                   callbacks=[tensorboard, draw_callback])
     else:
-        model.fit(training_rgb, training_lab, nb_epoch=EPOCH, batch_size=BATCH_SIZE, callbacks=[tensorboard])
+        model.fit(training_rgb, training_lab, epochs=EPOCHS, batch_size=BATCH_SIZE, callbacks=[tensorboard])
 
 
 def evaluate(model):
@@ -113,7 +113,7 @@ def run():
         Lambda(lambda x: x * 128)  # Multiply by 128 as a* and b* may be negative up to -128
     ])
 
-    model.compile(loss=loss, optimizer="adam", metrics=["accuracy", cie1976_keras])
+    model.compile(loss=loss, optimizer="adam", metrics=[cie1976_keras, cie2000_keras])
 
     render = DRAW_WAIT != 0
 
@@ -122,6 +122,5 @@ def run():
     predict(model)
 
 
-# test_delta_e()
 run()
 # print(training[:10])
