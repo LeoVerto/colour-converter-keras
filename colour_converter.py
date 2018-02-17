@@ -3,9 +3,10 @@
 import cv2
 import sys
 from keras import backend as K
-from keras.models import Sequential
-from keras.layers import Dense, Activation, Lambda
+from keras.models import Model
+from keras.layers import Dense, Input
 from keras.callbacks import TensorBoard, Callback
+from keras.engine.topology import Layer
 from utils import *
 from delta_e import cie1976_keras, cie2000_keras
 
@@ -112,15 +113,18 @@ class DrawCallback(Callback):
 
 
 def get_model():
-    model = Sequential([
-        Dense(12, input_dim=3),
-        Activation("relu"),
-        Dense(18),
-        Activation("relu"),
-        Dense(3),
-        Activation("linear"),
-        Lambda(lambda x: x * 128)  # Multiply by 128 as a* and b* may be negative up to -128
-    ])
+    # The layer gets 9 inputs from the previous layer's 3 nodes but we only want one input per node
+    mul = np.array([[[100, 0, 0], [0, 128, 0], [0, 0, 128]]])
+
+    inputs = Input(shape=(3,))
+    dense1 = Dense(12, activation="relu")(inputs)
+    dense2 = Dense(18, activation="relu")(dense1)
+    dense3 = Dense(3, activation="linear")(dense2)
+    multiplier = Dense(3, activation="linear", weights=mul, use_bias=False, trainable=False)
+    outputs = multiplier(dense3)
+
+    model = Model(inputs=inputs, outputs=outputs)
+
     return model
 
 
