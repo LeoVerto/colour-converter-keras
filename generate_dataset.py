@@ -37,4 +37,4 @@ def test():
 
 
 save_samples(100000, "training.npy")
-save_samples(10000, "validation.npy")
+save_samples(10000, "evaluation.npy")

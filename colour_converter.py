@@ -6,7 +6,6 @@ from keras import backend as K
 from keras.models import Model
 from keras.layers import Dense, Input
 from keras.callbacks import TensorBoard, Callback
-from keras.engine.topology import Layer
 from utils import *
 from delta_e import cie1976_keras, cie2000_keras
 
@@ -14,7 +13,7 @@ from delta_e import cie1976_keras, cie2000_keras
 
 BATCH_SIZE = 20
 EPOCHS = 5
-DRAW_WAIT = 5  # Set to 0 to disable drawing
+DRAW_WAIT = 5  # Set to -1 to disable drawing
 DRAW_EVERY = 10  # Only draw every n batches to speed up training
 
 tensorboard = TensorBoard(log_dir='./logs', histogram_freq=0,
@@ -32,23 +31,23 @@ def train(model, render=False):
     training_rgb = training[:, [0, 1, 2]]
     training_lab = training[:, [6, 7, 8]]
 
+    callbacks = [tensorboard]
+
     if render:
         draw_callback = DrawCallback()
-        model.fit(training_rgb, training_lab, epochs=EPOCHS, batch_size=BATCH_SIZE,
-                  callbacks=[tensorboard, draw_callback])
-    else:
-        model.fit(training_rgb, training_lab, epochs=EPOCHS, batch_size=BATCH_SIZE, callbacks=[tensorboard])
+        callbacks.append(draw_callback)
+
+    model.fit(training_rgb, training_lab, epochs=EPOCHS, batch_size=BATCH_SIZE,
+              callbacks=callbacks, validation_split=0.1)
 
 
 def evaluate(model):
-    validation = np.load("validation.npy")
+    evaluation = np.load("evaluation.npy")
 
     print("EVALUATION:")
 
-    loss_and_metrics = model.evaluate(validation[:, [0, 1, 2]], validation[:, [6, 7, 8]], batch_size=BATCH_SIZE)
+    loss_and_metrics = model.evaluate(evaluation[:, [0, 1, 2]], evaluation[:, [6, 7, 8]], batch_size=BATCH_SIZE)
     print(loss_and_metrics)
-
-    draw(model, 0)
 
 
 def predict(model):
@@ -66,10 +65,8 @@ def predict(model):
 
     for array in test_arrays:
         print(rgb2string(array[0]))
-        print("Expected:")
-        print(lab2string(pixel_rgb2lab(array[0])))
-        print("Got:")
-        print(lab2string(model.predict(array)[0]))
+        print("Expected:" + lab2string(pixel_rgb2lab(array[0])))
+        print("Got:     " + lab2string(model.predict(array)[0]))
 
 
 def draw(model, wait):
@@ -132,11 +129,12 @@ def run():
     model = get_model()
     model.compile(loss=loss, optimizer="adam", metrics=[cie1976_keras, cie2000_keras])
 
-    render = DRAW_WAIT != 0
+    render = DRAW_WAIT != -1
 
     train(model, render)
     evaluate(model)
     predict(model)
+    draw(model, 0)
 
 
 if __name__ == '__main__':
