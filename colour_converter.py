@@ -113,11 +113,11 @@ def get_model():
     # The layer gets 9 inputs from the previous layer's 3 nodes but we only want one input per node
     mul = np.array([[[100, 0, 0], [0, 128, 0], [0, 0, 128]]])
 
-    inputs = Input(shape=(3,))
-    dense1 = Dense(12, activation="relu")(inputs)
-    dense2 = Dense(18, activation="relu")(dense1)
-    dense3 = Dense(3, activation="linear")(dense2)
-    multiplier = Dense(3, activation="linear", weights=mul, use_bias=False, trainable=False)
+    inputs = Input(shape=(3,), name="Input")
+    dense1 = Dense(12, activation="relu", name="Relu_Dense")(inputs)
+    dense2 = Dense(18, activation="relu", name="Relu_Dense_2")(dense1)
+    dense3 = Dense(3, activation="linear", name="Linear_Dense")(dense2)
+    multiplier = Dense(3, activation="linear", weights=mul, use_bias=False, trainable=False, name="Multiplier")
     outputs = multiplier(dense3)
 
     model = Model(inputs=inputs, outputs=outputs)
