@@ -3,8 +3,8 @@
 import cv2
 import sys
 from keras import backend as K
-from keras.models import Model
-from keras.layers import Dense, Input
+from keras.models import Model, load_model
+from keras.layers import Dense, Input, Lambda
 from keras.callbacks import TensorBoard, Callback
 from utils import *
 from delta_e import cie1976_keras, cie2000_keras
@@ -13,7 +13,7 @@ from delta_e import cie1976_keras, cie2000_keras
 
 BATCH_SIZE = 20
 EPOCHS = 5
-DRAW_WAIT = 5  # Set to -1 to disable drawing
+DRAW_WAIT = -1  # Set to -1 to disable drawing
 DRAW_EVERY = 10  # Only draw every n batches to speed up training
 
 tensorboard = TensorBoard(log_dir='./logs', histogram_freq=0,
@@ -72,14 +72,20 @@ def predict(model):
 def draw(model, wait):
     data = training
 
-    img = np.copy(data[:10, [0, 1, 2]])
-    img = np.reshape(img, (10, 1, 3))
+    img = np.copy(data[:10, [0, 1, 2]]).reshape((10, 1, 3))
 
-    b = data[:10, [0, 1, 2]]
-    predictions = np.divide(np.reshape(model.predict(b), (10, 1, 3)), 128)
-    pred_rgb = np.multiply(color.lab2rgb(predictions), 64)  # Magic 64, no idea why this needs to be multiplied
-    img = np.append(img, pred_rgb, axis=1)
-    img = np.reshape(img, (10, 2, 3))
+    predictions = model.predict(data[:10, [0, 1, 2]]).reshape([10, 1, 3])
+    #print(predictions)
+
+    predictions = np.subtract(predictions, [50, 0, 0])
+    predictions = np.divide(predictions, [50, 128, 128])
+    #print(predictions)
+
+    pred_rgb = color.lab2rgb(predictions)
+
+    pred_rgb = np.multiply(pred_rgb, 128)
+
+    img = np.append(img, pred_rgb, axis=1).reshape((10, 2, 3))
 
     cv2.namedWindow("Keras Colour Converter", cv2.WINDOW_NORMAL)
     cv2.resizeWindow("Keras Colour Converter", 600, 600)
@@ -110,17 +116,17 @@ class DrawCallback(Callback):
 
 
 def get_model():
-    # The layer gets 9 inputs from the previous layer's 3 nodes but we only want one input per node
-    mul = np.array([[[100, 0, 0], [0, 128, 0], [0, 0, 128]]])
-
     inputs = Input(shape=(3,), name="Input")
     dense1 = Dense(12, activation="relu", name="Relu_Dense")(inputs)
     dense2 = Dense(18, activation="relu", name="Relu_Dense_2")(dense1)
     dense3 = Dense(3, activation="linear", name="Linear_Dense")(dense2)
-    multiplier = Dense(3, activation="linear", weights=mul, use_bias=False, trainable=False, name="Multiplier")
-    outputs = multiplier(dense3)
 
-    model = Model(inputs=inputs, outputs=outputs)
+    mul = K.constant(np.array([50, 128, 128]))
+    add = K.constant(np.array([50, 0, 0]))
+
+    scaler = Lambda(lambda x: x * mul + add, name="Output_Scaler")(dense3)
+
+    model = Model(inputs=inputs, outputs=scaler)
 
     return model
 
@@ -131,9 +137,11 @@ def run():
 
     render = DRAW_WAIT != -1
 
-    train(model, render)
-    evaluate(model)
-    predict(model)
+    #train(model, render)
+    model = load_model("model.h5")
+    #evaluate(model)
+    #predict(model)
+    model.save("model.h5")
     draw(model, 0)
 
 

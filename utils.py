@@ -22,3 +22,10 @@ def hsv2string(hsv):
 
 def lab2string(lab):
     return "Lab: {}, {}, {}".format(lab[0], lab[1], lab[2])
+
+
+def upscale_lab(lab):
+    mul = np.array([50, 128, 128])
+    add = np.array([50, 0, 0])
+
+    return lab * mul + add
