@@ -72,14 +72,13 @@ def predict(model):
 def draw(model, wait):
     data = training
 
-    img = np.copy(data[:10, [0, 1, 2]])
-    img = np.reshape(img, (10, 1, 3))
+    img = np.copy(data[:10, [0, 1, 2]]).reshape((10, 1, 3))
 
-    b = data[:10, [0, 1, 2]]
-    predictions = np.divide(np.reshape(model.predict(b), (10, 1, 3)), 128)
-    pred_rgb = np.multiply(color.lab2rgb(predictions), 64)  # Magic 64, no idea why this needs to be multiplied
-    img = np.append(img, pred_rgb, axis=1)
-    img = np.reshape(img, (10, 2, 3))
+    predictions = model.predict(data[:10, [0, 1, 2]]).reshape([10, 1, 3])
+
+    pred_rgb = color.lab2rgb(predictions)
+
+    img = np.append(img, pred_rgb, axis=1).reshape((10, 2, 3))
 
     cv2.namedWindow("Keras Colour Converter", cv2.WINDOW_NORMAL)
     cv2.resizeWindow("Keras Colour Converter", 600, 600)
@@ -126,6 +125,7 @@ def get_model():
 
 
 def run():
+    # model = load_model("model.h5")
     model = get_model()
     model.compile(loss=loss, optimizer="adam", metrics=[cie1976_keras, cie2000_keras])
 
@@ -134,6 +134,7 @@ def run():
     train(model, render)
     evaluate(model)
     predict(model)
+    # model.save("model.h5")
     draw(model, 0)
 
 

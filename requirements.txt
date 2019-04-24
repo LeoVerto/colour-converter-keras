@@ -2,5 +2,4 @@ numpy
 tensorflow
 keras
 scikit-image
-cv2
 colormath
