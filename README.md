@@ -12,17 +12,12 @@ I chose the L\*a\*b\* colour space as the output because it easily allows
 for calculation [Delta E](https://zschuessler.github.io/DeltaE/learn/),
 which is a pretty consistent measurement of how humans perceive colour difference.
 
-The formula used for the loss function is CIE76 (or Delta E 67)
+The formula used for the loss function is the color difference function CIEDE2000 (aka Delta E 2000)
 but other ones can easily be implemented.
-
-~~After training, the model should be able to reach a Delta E of around 3.3 so there is
-definitely room for further improvement.~~
 
 The model now consistently reaches a Delta E of around 1.3, which should be almost
 imperceptible to the human eye.
 
-At this point switching to Delta E 2000 to gain better accuracy would probably
-make sense.
 
 ## Running
 1. Run `generate_dataset.py` to generate a training and validation set.
